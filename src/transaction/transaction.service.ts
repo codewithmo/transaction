@@ -35,11 +35,11 @@ export class TransactionService {
       } = differenceObject;
 
       if (
-        yearDifference <= 0 &&
-        monthDifference <= 0 &&
-        dayDifference <= 0 &&
+        yearDifference + monthDifference + dayDifference === 0 &&
         minutesDifference <= 1 &&
-        secondsDifference <= 60
+        minutesDifference >= 0 &&
+        secondsDifference <= 60 &&
+        secondsDifference >= 0
       ) {
         this.mockData.push(input);
         return input;
@@ -57,6 +57,8 @@ export class TransactionService {
       return err;
     }
   }
+
+  //helper function
   async getTimeDifference(time1, time2) {
     return {
       yearDifference: time1.getFullYear() - time2.getFullYear(),
