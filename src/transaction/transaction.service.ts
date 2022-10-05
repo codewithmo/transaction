@@ -8,6 +8,7 @@ import { ICreateTransaction } from './transaction.interface';
 @Injectable()
 export class TransactionService {
   mockData = [];
+
   async createTransaction(input: ICreateTransaction) {
     try {
       if (new Date().getTime() < new Date(input.timestamp).getTime())
@@ -25,22 +26,8 @@ export class TransactionService {
         currentTime,
         inputTime,
       );
-      let {
-        yearDifference,
-        monthDifference,
-        dayDifference,
-        minutesDifference,
-        secondsDifference,
-        millisecondsDifference,
-      } = differenceObject;
 
-      if (
-        yearDifference + monthDifference + dayDifference === 0 &&
-        minutesDifference <= 1 &&
-        minutesDifference >= 0 &&
-        secondsDifference <= 60 &&
-        secondsDifference >= 0
-      ) {
+      if (this.isTransactionOlderThan60Sec(differenceObject)) {
         this.mockData.push(input);
         return input;
       } else
@@ -58,16 +45,59 @@ export class TransactionService {
     }
   }
 
-  //helper function
-  async getTimeDifference(time1, time2) {
-    return {
-      yearDifference: time1.getFullYear() - time2.getFullYear(),
-      monthDifference: time1.getMonth() - time2.getMonth(),
-      dayDifference: time1.getDay() - time2.getDay(),
-      hoursDifference: time1.getHours() - time2.getHours(),
-      minutesDifference: time1.getMinutes() - time2.getMinutes(),
-      secondsDifference: time1.getSeconds() - time2.getSeconds(),
-      millisecondsDifference: time1.getMilliseconds() - time2.getMilliseconds(),
+  async calculateStatistics() {
+    let currentTime = new Date();
+    let amountStats = [];
+    this.mockData.forEach((transaction) => {
+      let inputTime = new Date(transaction.timestamp);
+      let differenceObject = this.getTimeDifference(currentTime, inputTime);
+      if (this.isTransactionOlderThan60Sec(differenceObject)) {
+        amountStats.push(transaction.amount);
+      }
+    });
+    console.log('amountStats---> ', amountStats);
+    let resultStats = {
+      sum: amountStats.reduce((a, b) => a + b, 0),
+      avg: amountStats.reduce((a, b) => a + b, 0) / amountStats.length || 0,
+      max:
+        amountStats.reduce(
+          (a, b) => Math.max(a, b),
+          Number.NEGATIVE_INFINITY,
+        ) || 0,
+      min: Math.min(...amountStats) || 0,
+      count: amountStats.length,
     };
+    return resultStats;
+  }
+
+  //helper functions
+  async getTimeDifference(currentTime, inputTime) {
+    return {
+      yearDifference: currentTime.getFullYear() - inputTime.getFullYear(),
+      monthDifference: currentTime.getMonth() - inputTime.getMonth(),
+      dayDifference: currentTime.getDay() - inputTime.getDay(),
+      hoursDifference: currentTime.getHours() - inputTime.getHours(),
+      minutesDifference: currentTime.getMinutes() - inputTime.getMinutes(),
+      secondsDifference: currentTime.getSeconds() - inputTime.getSeconds(),
+      millisecondsDifference:
+        currentTime.getMilliseconds() - inputTime.getMilliseconds(),
+    };
+  }
+  isTransactionOlderThan60Sec(differenceObject) {
+    let {
+      yearDifference,
+      monthDifference,
+      dayDifference,
+      minutesDifference,
+      secondsDifference,
+    } = differenceObject;
+    if (
+      yearDifference + monthDifference + dayDifference === 0 &&
+      minutesDifference <= 1 &&
+      minutesDifference >= 0 &&
+      secondsDifference <= 60 &&
+      secondsDifference >= 0
+    )
+      return true;
   }
 }
